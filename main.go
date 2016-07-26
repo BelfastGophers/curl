@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -8,7 +9,11 @@ import (
 )
 
 func main() {
-	url := os.Args[1]
+	fileName := flag.String("o", "page.html", "Filename to use for saving response.")
+
+	flag.Parse()
+
+	url := os.Args[len(os.Args)-1]
 	resp, err := http.Get(url)
 
 	if err != nil {
@@ -19,5 +24,6 @@ func main() {
 	b, err := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
 
-	fmt.Println("%v\n", string(b))
+	ioutil.WriteFile(*fileName, b, 0644)
+
 }
