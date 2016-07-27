@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -9,12 +10,27 @@ import (
 )
 
 func main() {
-	fileName := flag.String("o", "page.html", "Filename to use for saving response.")
+	fileName := flag.String("o", "", "Filename to use for saving response.")
+	httpMethod := flag.String("X", "GET", "HTTP method to use for the request")
+	reqBody := flag.String("d", "", "Request body")
 
 	flag.Parse()
 
 	url := os.Args[len(os.Args)-1]
-	resp, err := http.Get(url)
+
+	var err error
+	var resp *http.Response
+
+	if *httpMethod == "GET" {
+		resp, err = http.Get(url)
+	} else {
+		req, _ := http.NewRequest("POST", url, bytes.NewBuffer([]byte(*reqBody)))
+		req.Header.Set("Content-type", "application/json")
+
+		client := &http.Client{}
+
+		resp, err = client.Do(req)
+	}
 
 	if err != nil {
 		fmt.Println("%v\n", err)
@@ -24,6 +40,10 @@ func main() {
 	b, err := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
 
-	ioutil.WriteFile(*fileName, b, 0644)
+	if *fileName == "" {
+		fmt.Println(string(b))
+	} else {
+		ioutil.WriteFile(*fileName, b, 0644)
+	}
 
 }
